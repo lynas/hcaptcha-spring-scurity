@@ -65,22 +65,16 @@ class HomeController(
 
 	@PostMapping("/login")
 	fun loginPost(@RequestParam("h-captcha-response") captchaResponse: String): String {
-		println(hCaptchaSecretKey)
 		val headers = HttpHeaders()
 		headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
 		val map = LinkedMultiValueMap<String, String>()
 		map.add("response", captchaResponse)
 		map.add("secret", hCaptchaSecretKey)
-		println(map)
 		val request = HttpEntity<MultiValueMap<String, String>>(map, headers)
 		val url = "https://hcaptcha.com/siteverify"
-		val response = restTemplate.postForEntity(url, request, String::class.java)
-
-		println("Post response")
-		println(response)
-
-		println("respones")
-//		println(captchaResponse)
+		val response = restTemplate.postForEntity(url, request, HCaptchaResponse::class.java)
+		println("h-captcha verification response")
+		println(response.body?.success)
 		return "login"
 	}
 }
@@ -100,3 +94,7 @@ class AppUser {
 interface UserRepository : JpaRepository<AppUser, String> {
 	fun findByUsername(username: String): AppUser?
 }
+
+data class HCaptchaResponse(
+	val success: Boolean
+)
