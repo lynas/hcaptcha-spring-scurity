@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 <body>
 <div th:if="${param.error}">
@@ -14,6 +15,7 @@
 <form th:action="@{/login}" method="post">
     <div><label> User Name : <input type="text" name="username"/> </label></div>
     <div><label> Password: <input type="password" name="password"/> </label></div>
+    <div class="h-captcha" data-sitekey="43603e26-e7f8-40ac-bdd0-ea2abbc8fa78"></div>
     <div><input type="submit" value="Sign In"/></div>
 </form>
 </body>

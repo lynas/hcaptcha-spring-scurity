@@ -1,0 +1,4 @@
+hCaptcha:
+  site: ${HCAPTCHA_SITE_KEY:KEY}
+  secret:
+    key: ${HCAPTCHA_SECRET_KEY:KEY}
