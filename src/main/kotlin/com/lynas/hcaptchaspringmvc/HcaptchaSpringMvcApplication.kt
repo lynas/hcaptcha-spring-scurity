@@ -88,8 +88,13 @@ class HomeController(
 
 		val apiRequest = HttpEntity<MultiValueMap<String, String>>(map, headers)
 		val url = "https://hcaptcha.com/siteverify"
-		val response = restTemplate.postForEntity(url, apiRequest, HCaptchaResponse::class.java)
-		if (response.body?.success == false) {
+		val isCaptchaSuccess = try{
+			restTemplate.postForEntity(url, apiRequest, HCaptchaResponse::class.java).body?.success ?: false
+		} catch (ex: Exception){
+			ex.printStackTrace()
+			true
+		}
+		if (!isCaptchaSuccess) {
 			throw RuntimeException("invalid captcha")
 		}
 
