@@ -1,5 +1,6 @@
 package com.lynas.hcaptchaspringmvc
 
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 import java.util.*
 import javax.persistence.*
@@ -60,6 +62,8 @@ class HomeController(
 	private val userRepository: UserRepository
 ) {
 
+	private val logger = KotlinLogging.logger {}
+
 	@Value("\${hCaptcha.secret.key}")
 	private lateinit var hCaptchaSecretKey: String
 
@@ -90,8 +94,8 @@ class HomeController(
 		val url = "https://hcaptcha.com/siteverify"
 		val isCaptchaSuccess = try{
 			restTemplate.postForEntity(url, apiRequest, HCaptchaResponse::class.java).body?.success ?: false
-		} catch (ex: Exception){
-			ex.printStackTrace()
+		} catch (ex: HttpClientErrorException){
+			logger.error("hcaptcha error", ex)
 			true
 		}
 		if (!isCaptchaSuccess) {

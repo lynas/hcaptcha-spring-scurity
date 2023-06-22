@@ -27,6 +27,8 @@ dependencies {
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("io.github.microutils:kotlin-logging:3.0.5")
+
 	runtimeOnly("com.h2database:h2")
 
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity5")
