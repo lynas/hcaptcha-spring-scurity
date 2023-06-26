@@ -1,9 +1,11 @@
 package com.lynas.hcaptchaspringmvc
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 import org.springframework.boot.runApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
@@ -32,7 +34,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpSession
 
 
-@SpringBootApplication
+@SpringBootApplication(exclude = [UserDetailsServiceAutoConfiguration::class])
 class HcaptchaSpringMvcApplication {
 	@Bean
 	fun restTemplate(): RestTemplate = RestTemplateBuilder().build()
@@ -83,6 +85,7 @@ class HomeController(
 		@ModelAttribute appUserDto: AppUserDto,
 		request: HttpServletRequest
 	): String {
+		logger.info { captchaResponse }
 		val headers = HttpHeaders()
 		headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
 		val map = LinkedMultiValueMap<String, String>().apply {
@@ -139,7 +142,9 @@ interface UserRepository : JpaRepository<AppUser, String> {
 }
 
 data class HCaptchaResponse(
-	val success: Boolean
+	val success: Boolean,
+	@JsonProperty(value = "error-codes")
+	val errorCodes: List<String> = listOf()
 )
 
 fun checkPassword(passwordClean: String, passwordHash: String): Boolean = BCrypt.checkpw(passwordClean, passwordHash)
