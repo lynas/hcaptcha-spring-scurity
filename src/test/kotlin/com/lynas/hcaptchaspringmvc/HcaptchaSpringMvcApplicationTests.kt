@@ -1,5 +1,6 @@
 package com.lynas.hcaptchaspringmvc
 
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,21 +18,26 @@ import org.springframework.web.context.WebApplicationContext
 class HcaptchaSpringMvcApplicationTests {
 
 
-	private lateinit var mockMvc: MockMvc
+//	private lateinit var mockMvc: MockMvc
+
+//	@Autowired
+//	private lateinit var webApplicationContext: WebApplicationContext
+
+//	@BeforeEach
+//	fun setUp() {
+//		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
+//	}
 
 	@Autowired
-	private lateinit var webApplicationContext: WebApplicationContext
-
-	@BeforeEach
-	fun setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
-	}
+	private lateinit var apiCallService: ApiCallService
 
 	@Test
 	fun contextLoads() {
-		mockMvc.perform(get("/"))
-			.andExpect(status().isOk())
-			.andExpect(content().string("Hello World!"))
+//		mockMvc.perform(get("/"))
+//			.andExpect(status().isOk())
+//			.andExpect(content().string("Hello World!"))
+		val response = apiCallService.makeApiCall("")
+		Assertions.assertFalse(response)
 	}
 
 }
