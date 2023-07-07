@@ -28,7 +28,9 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.github.microutils:kotlin-logging:3.0.5")
-
+	implementation("org.springframework:spring-webflux")
+	implementation("io.projectreactor.netty:reactor-netty-http")
+	implementation("io.netty:netty-resolver-dns-native-macos:4.1.82.Final:osx-aarch_64")
 	runtimeOnly("com.h2database:h2")
 
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity5")

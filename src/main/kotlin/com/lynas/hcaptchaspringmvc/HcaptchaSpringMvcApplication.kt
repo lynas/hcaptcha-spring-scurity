@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY
 import org.springframework.stereotype.Controller
+import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.reactive.function.BodyInserters
+import org.springframework.web.reactive.function.client.WebClient
 import java.util.*
 import javax.persistence.*
 import javax.servlet.http.HttpServletRequest
@@ -38,6 +41,9 @@ import javax.servlet.http.HttpSession
 class HcaptchaSpringMvcApplication {
 	@Bean
 	fun restTemplate(): RestTemplate = RestTemplateBuilder().build()
+
+	@Bean
+	fun webClient() = WebClient.create()
 
 	@Bean
 	fun runner(
@@ -60,8 +66,8 @@ fun main(args: Array<String>) {
 
 @Controller
 class HomeController(
-	private val restTemplate: RestTemplate,
-	private val userRepository: UserRepository
+	private val userRepository: UserRepository,
+	private val apiCallService: ApiCallService
 ) {
 
 	private val logger = KotlinLogging.logger {}
@@ -86,6 +92,52 @@ class HomeController(
 		request: HttpServletRequest
 	): String {
 		logger.info { captchaResponse }
+		val isCaptchaSuccess = apiCallService.makeApiCall(captchaResponse)
+		if (!isCaptchaSuccess) {
+			throw RuntimeException("invalid captcha")
+		}
+		logger.info { isCaptchaSuccess }
+		val appUser = userRepository.findByUsername(appUserDto.username)
+		val isValidUser = checkPassword(appUserDto.password, appUser?.password ?: "")
+		if (!isValidUser) {
+			throw RuntimeException("invalid user or password")
+		}
+
+		val sc = SecurityContextHolder.getContext()
+		sc.authentication = UsernamePasswordAuthenticationToken("username", "password",
+			AuthorityUtils.createAuthorityList("ROLE_USER"))
+		val session: HttpSession = request.getSession(true)
+		session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, sc)
+		return "redirect:/"
+	}
+}
+
+@Service
+class ApiCallService(
+	private val webClient: WebClient,
+	private val restTemplate: RestTemplate,
+) {
+	private val logger = KotlinLogging.logger {}
+	@Value("\${hCaptcha.secret.key}")
+	private lateinit var hCaptchaSecretKey: String
+
+	fun makeApiCall(captchaResponse: String) : Boolean {
+		val formData = LinkedMultiValueMap<String, String>().apply {
+			add("response", captchaResponse)
+			add("secret", hCaptchaSecretKey)
+		}
+		return webClient.post()
+			.uri("https://hcaptcha.com/siteverify")
+			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+			.body(BodyInserters.fromFormData(formData))
+			.retrieve()
+			.bodyToMono(HCaptchaResponse::class.java)
+			.block()
+			?.success ?: false
+
+	}
+
+	fun makeApiCallRest(captchaResponse: String) : Boolean {
 		val headers = HttpHeaders()
 		headers.contentType = MediaType.APPLICATION_FORM_URLENCODED
 		val map = LinkedMultiValueMap<String, String>().apply {
@@ -101,22 +153,7 @@ class HomeController(
 			logger.error("hcaptcha error", ex)
 			true
 		}
-		if (!isCaptchaSuccess) {
-			throw RuntimeException("invalid captcha")
-		}
-
-		val appUser = userRepository.findByUsername(appUserDto.username)
-		val isValidUser = checkPassword(appUserDto.password, appUser?.password ?: "")
-		if (!isValidUser) {
-			throw RuntimeException("invalid user or password")
-		}
-
-		val sc = SecurityContextHolder.getContext()
-		sc.authentication = UsernamePasswordAuthenticationToken("username", "password",
-			AuthorityUtils.createAuthorityList("ROLE_USER"))
-		val session: HttpSession = request.getSession(true)
-		session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, sc)
-		return "redirect:/"
+		return isCaptchaSuccess
 	}
 }
 
