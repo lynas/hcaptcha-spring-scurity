@@ -1,43 +1,53 @@
 package com.lynas.hcaptchaspringmvc
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import org.springframework.web.context.WebApplicationContext
+import com.fasterxml.jackson.databind.ObjectMapper
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.jupiter.api.*
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.reactive.function.client.WebClient
 
 
-@SpringBootTest
 class HcaptchaSpringMvcApplicationTests {
 
 
-//	private lateinit var mockMvc: MockMvc
-
-//	@Autowired
-//	private lateinit var webApplicationContext: WebApplicationContext
-
-//	@BeforeEach
-//	fun setUp() {
-//		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
-//	}
-
-	@Autowired
+	private lateinit var mockWebServer: MockWebServer
+	private lateinit var webClient: WebClient
 	private lateinit var apiCallService: ApiCallService
 
+	@BeforeEach
+	fun setUp() {
+		mockWebServer = MockWebServer()
+		mockWebServer.start()
+
+		webClient = WebClient.builder()
+			.baseUrl(mockWebServer.url("/").toString())
+			.build()
+
+		apiCallService = ApiCallService(webClient,RestTemplate(),"","")
+
+	}
+
+	@AfterEach
+	fun tearDown() {
+		mockWebServer.shutdown()
+	}
+
 	@Test
-	fun contextLoads() {
-//		mockMvc.perform(get("/"))
-//			.andExpect(status().isOk())
-//			.andExpect(content().string("Hello World!"))
-		val response = apiCallService.makeApiCall("")
-		Assertions.assertFalse(response)
+	fun shouldReturnTrueWhenSendingValidCaptcha() {
+
+
+		val response: String = ObjectMapper().writeValueAsString(HCaptchaResponse(true))
+		mockWebServer.enqueue(MockResponse()
+			.setResponseCode(HttpStatus.OK.value())
+			.setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+			.setBody(response))
+
+		val res = apiCallService.makeApiCall("lll")
+		Assertions.assertEquals(true, res)
+
 	}
 
 }
