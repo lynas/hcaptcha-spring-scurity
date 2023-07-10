@@ -2,7 +2,6 @@ package com.lynas.hcaptchaspringmvc
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.AuthorityUtils
 import org.springframework.security.core.context.SecurityContextHolder
@@ -24,9 +23,6 @@ class HomeController(
 
     private val logger = KotlinLogging.logger {}
 
-    @Value("\${hCaptcha.secret.key}")
-    private lateinit var hCaptchaSecretKey: String
-
     @RequestMapping("/")
     fun home(request: HttpServletRequest): String {
         return "home"
@@ -46,20 +42,19 @@ class HomeController(
         logger.info { captchaResponse }
         val isCaptchaSuccess = apiCallService.makeApiCall(captchaResponse)
         if (!isCaptchaSuccess) {
-            throw RuntimeException("invalid captcha")
+            throw RuntimeException("Invalid captcha")
         }
-        logger.info { isCaptchaSuccess }
         val appUser = userRepository.findByUsername(appUserDto.username)
         val isValidUser = checkPassword(appUserDto.password, appUser?.password ?: "")
         if (!isValidUser) {
             throw RuntimeException("invalid user or password")
         }
 
-        val sc = SecurityContextHolder.getContext()
-        sc.authentication = UsernamePasswordAuthenticationToken("username", "password",
+        val securityContext = SecurityContextHolder.getContext()
+        securityContext.authentication = UsernamePasswordAuthenticationToken("username", "password",
             AuthorityUtils.createAuthorityList("ROLE_USER"))
         val session: HttpSession = request.getSession(true)
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, sc)
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext)
         return "redirect:/"
     }
 }

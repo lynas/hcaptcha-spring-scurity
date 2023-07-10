@@ -26,13 +26,13 @@ class HcaptchaSpringMvcApplicationTests {
     private lateinit var port: String
 
     @BeforeAll
-    fun setup(){
+    fun setup() {
         mockWebServer = MockWebServer()
         mockWebServer.start(port.toInt())
     }
 
     @AfterAll
-    fun tearDown(){
+    fun tearDown() {
         mockWebServer.shutdown()
     }
 
@@ -42,9 +42,10 @@ class HcaptchaSpringMvcApplicationTests {
         val response: String = ObjectMapper().writeValueAsString(HCaptchaResponse(true))
         mockWebServer.enqueue(
             MockResponse()
-            .setResponseCode(HttpStatus.OK.value())
-            .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            .setBody(response))
+                .setResponseCode(HttpStatus.OK.value())
+                .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .setBody(response)
+        )
 
         val res = apiCallService.makeApiCall("lll")
         assertEquals(true, res)
@@ -58,7 +59,8 @@ class HcaptchaSpringMvcApplicationTests {
             MockResponse()
                 .setResponseCode(HttpStatus.OK.value())
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .setBody(response))
+                .setBody(response)
+        )
 
         val res = apiCallService.makeApiCall("lll")
         assertEquals(false, res)
