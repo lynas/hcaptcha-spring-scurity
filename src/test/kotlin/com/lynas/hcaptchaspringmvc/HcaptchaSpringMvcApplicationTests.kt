@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -21,10 +22,13 @@ class HcaptchaSpringMvcApplicationTests {
     private lateinit var apiCallService: ApiCallService
     private lateinit var mockWebServer: MockWebServer
 
+    @Value("\${hCaptcha.test.port}")
+    private lateinit var port: String
+
     @BeforeAll
     fun setup(){
         mockWebServer = MockWebServer()
-        mockWebServer.start(55444)
+        mockWebServer.start(port.toInt())
     }
 
     @AfterAll
@@ -44,6 +48,20 @@ class HcaptchaSpringMvcApplicationTests {
 
         val res = apiCallService.makeApiCall("lll")
         assertEquals(true, res)
+
+    }
+
+    @Test
+    fun shouldReturnFalseWhenSendingInValidCaptcha() {
+        val response: String = ObjectMapper().writeValueAsString(HCaptchaResponse(false))
+        mockWebServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .setBody(response))
+
+        val res = apiCallService.makeApiCall("lll")
+        assertEquals(false, res)
 
     }
 }

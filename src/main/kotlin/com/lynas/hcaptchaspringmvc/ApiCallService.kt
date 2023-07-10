@@ -1,6 +1,5 @@
 package com.lynas.hcaptchaspringmvc
 
-import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -14,18 +13,16 @@ class ApiCallService(
     private val webClient: WebClient,
     @Value("\${hCaptcha.secret.key}")
     private var hCaptchaSecretKey: String,
-    @Value("\${hCaptcha.site}")
+    @Value("\${hCaptcha.site.url}")
     private var siteUrl: String
 ) {
-    private val logger = KotlinLogging.logger {}
 
-
-    fun makeApiCall(captchaResponse: String) : Boolean {
+    fun makeApiCall(captchaResponse: String): Boolean {
         val formData = LinkedMultiValueMap<String, String>().apply {
             add("response", captchaResponse)
             add("secret", hCaptchaSecretKey)
         }
-        val rrr: Boolean =  webClient.post()
+        return webClient.post()
             .uri(siteUrl)
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .body(BodyInserters.fromFormData(formData))
@@ -34,10 +31,6 @@ class ApiCallService(
             .blockOptional()
             .map { it.success }
             .orElse(false)
-        println("makeApiCall response")
-        println(rrr)
-        println("makeApiCall response")
-        return rrr
 
     }
 

@@ -1,4 +1,8 @@
 hCaptcha:
-  site: http://localhost:55444/
+  site:
+    url: http://localhost:55444/
+    key: ${HCAPTCHA_SITE_KEY:siteUrl}
   secret:
     key: ${HCAPTCHA_SECRET_KEY:secret}
+  test:
+    port: 55444
