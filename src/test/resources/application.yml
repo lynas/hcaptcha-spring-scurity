@@ -1,4 +1,4 @@
 hCaptcha:
-  site: ${HCAPTCHA_SITE_KEY:siteUrl}
+  site: http://localhost:55444/
   secret:
     key: ${HCAPTCHA_SECRET_KEY:secret}
